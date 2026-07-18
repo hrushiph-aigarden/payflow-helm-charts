@@ -46,6 +46,7 @@ serviceAccount:
   name: "payflow-pro"
 
 # Affinity & NodeSelector: Disabled or basic (GKE Autopilot manages scheduling natively)
-nodeSelector: {}
+nodeSelector:
+  pci-scope: null
 tolerations: []
 affinity: {}

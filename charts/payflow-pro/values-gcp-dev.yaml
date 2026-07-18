@@ -1,0 +1,52 @@
+# PayFlow Pro Helm Chart — GCP Dev Environment Values (POC Cost-Optimized)
+# Designed for GKE Autopilot + localhost port-forwarding
+
+replicaCount: 1
+
+image:
+  pullPolicy: Always
+  tag: latest
+
+# GKE Autopilot resource requests (Autopilot enforces minimum requests of 250m CPU and 512Mi memory per pod, so we specify them to match GKE rules exactly)
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Ingress: Disabled to avoid GCLB monthly base charge ($20/month)
+# Access the service via localhost port-forwarding:
+# $ kubectl port-forward service/payflow-pro 8080:8080
+ingress:
+  enabled: false
+
+# Autoscale & PDB: Disabled to minimize pod footprint
+autoscaling:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
+
+# Vault sidecar: Disabled for mock POC mode
+vault:
+  enabled: false
+
+env:
+  LOG_LEVEL: debug
+  PAYMENT_GATEWAY_URL: http://mock-gateway.payflow-dev.svc.cluster.local:8080
+  # Cloud SQL IP configured during GKE deploy
+  DATABASE_HOST: "10.10.16.3" # Replaced dynamically via GKE env or service config
+
+# Workload Identity: GCP service account binding (equivalent of AWS IRSA)
+serviceAccount:
+  create: true
+  annotations:
+    iam.gke.io/gcp-service-account: "payflow-dev-sa@gcp-project.iam.gserviceaccount.com"
+  name: "payflow-pro"
+
+# Affinity & NodeSelector: Disabled or basic (GKE Autopilot manages scheduling natively)
+nodeSelector: {}
+tolerations: []
+affinity: {}

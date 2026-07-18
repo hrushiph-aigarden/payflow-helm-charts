@@ -1,0 +1,60 @@
+# Production environment overrides
+# Full hardening: HPA, WAF, PDB, all safeguards
+# NOTE: Deployed via Argo CD only. No manual helm apply.
+
+replicaCount: 3  # HPA takes over above this
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+vault:
+  enabled: true
+  role: payflow-pro-prod
+  secrets:
+    - path: payflow/prod/db-credentials
+      key: db-credentials
+    - path: payflow/prod/payment-gateway-api-keys
+      key: gateway-keys
+
+env:
+  LOG_LEVEL: info
+  PAYMENT_GATEWAY_URL: https://api.stripe.com
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+ingress:
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
+    # PCI-DSS: WAF v2 ACL
+    alb.ingress.kubernetes.io/wafv2-acl-arn: arn:aws:wafv2:us-east-1:123456789:regional/webacl/payflow-waf/abc123
+  hosts:
+    - host: api.payflow.fintechcorp.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+nodeSelector:
+  pci-scope: "true"
+
+tolerations:
+  - key: dedicated
+    value: payflow
+    operator: Equal
+    effect: NoSchedule

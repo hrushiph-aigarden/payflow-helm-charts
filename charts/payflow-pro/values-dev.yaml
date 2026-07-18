@@ -1,0 +1,41 @@
+# Dev environment overrides
+# Usage: helm upgrade --install payflow-pro ./charts/payflow-pro -f values-dev.yaml
+
+replicaCount: 1
+
+image:
+  pullPolicy: Always
+  tag: latest
+
+autoscaling:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
+
+vault:
+  enabled: false  # Dev: use mock secrets
+
+env:
+  LOG_LEVEL: debug
+  PAYMENT_GATEWAY_URL: http://mock-gateway.payflow-dev.svc.cluster.local:8080
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+ingress:
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internal
+  hosts:
+    - host: api.dev.payflow.internal
+      paths:
+        - path: /
+          pathType: Prefix
+
+nodeSelector: {}
+tolerations: []

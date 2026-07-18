@@ -1,0 +1,39 @@
+# Staging environment overrides
+# Production-like, real integrations, Vault enabled
+
+replicaCount: 2
+
+image:
+  pullPolicy: IfNotPresent
+  tag: ""  # Set by CI/CD: helm upgrade --set image.tag=$VERSION
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+vault:
+  enabled: true
+  secrets:
+    - path: payflow/staging/db-credentials
+      key: db-credentials
+    - path: payflow/staging/payment-gateway-api-keys
+      key: gateway-keys
+
+env:
+  LOG_LEVEL: info
+  PAYMENT_GATEWAY_URL: https://api.stripe.com/v1  # Stripe sandbox (test keys)
+
+ingress:
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/target-type: ip
+  hosts:
+    - host: api.staging.payflow.internal
+      paths:
+        - path: /
+          pathType: Prefix

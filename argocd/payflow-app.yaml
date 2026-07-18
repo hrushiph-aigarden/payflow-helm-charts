@@ -1,0 +1,58 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: payflow-pro
+  namespace: argocd
+  annotations:
+    # Link back to Jira
+    jira.epic: "https://ainursery.atlassian.net/browse/SCRUM-7"
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: payflow-dev
+            autoSync: "true"
+            valuesFile: values-dev.yaml
+          - env: staging
+            namespace: payflow-staging
+            autoSync: "true"
+            valuesFile: values-staging.yaml
+          - env: prod
+            namespace: payflow-prod
+            autoSync: "false"   # Production: manual sync gate (CAB required)
+            valuesFile: values-prod.yaml
+  template:
+    metadata:
+      name: "payflow-pro-{{env}}"
+      labels:
+        app: payflow-pro
+        environment: "{{env}}"
+        pci-scope: "true"
+    spec:
+      project: payflow
+      source:
+        repoURL: https://github.com/hrushiph-aigarden/payflow-helm-charts
+        targetRevision: HEAD
+        path: charts/payflow-pro
+        helm:
+          valueFiles:
+            - "{{valuesFile}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        retry:
+          limit: 3
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+      info:
+        - name: Jira Epic
+          value: https://ainursery.atlassian.net/browse/SCRUM-7
+        - name: Infra Repo
+          value: https://github.com/hrushiph-aigarden/payflow-infra

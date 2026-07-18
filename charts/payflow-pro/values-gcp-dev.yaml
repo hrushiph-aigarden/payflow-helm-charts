@@ -36,8 +36,7 @@ vault:
 env:
   LOG_LEVEL: debug
   PAYMENT_GATEWAY_URL: http://mock-gateway.payflow-dev.svc.cluster.local:8080
-  # Cloud SQL IP configured during GKE deploy
-  DATABASE_HOST: "10.10.16.3" # Replaced dynamically via GKE env or service config
+  DATABASE_HOST: "10.114.0.3"
 
 # Workload Identity: GCP service account binding (equivalent of AWS IRSA)
 serviceAccount:

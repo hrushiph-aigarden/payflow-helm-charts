@@ -34,6 +34,13 @@ podDisruptionBudget:
 vault:
   enabled: false
 
+# Service: override targetPort to 80 for nginx:alpine demo (real app uses 8080)
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+  grpcPort: null
+
 env:
   LOG_LEVEL: debug
   PAYMENT_GATEWAY_URL: http://mock-gateway.payflow-dev.svc.cluster.local:8080

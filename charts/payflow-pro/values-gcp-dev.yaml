@@ -52,6 +52,26 @@ nodeSelector:
 tolerations: []
 affinity: {}
 
+# Security context override for demo: nginx:alpine needs writable /var/cache/nginx
+# Production PayFlow Pro uses readOnlyRootFilesystem: true (Go binary needs no write access)
+# For the POC demo we disable this so nginx can create its temp directories
+securityContext:
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: false
+  runAsNonRoot: false
+  runAsUser: 0
+  capabilities:
+    drop: []
+
+podSecurityContext:
+  runAsNonRoot: false
+  runAsUser: 0
+  fsGroup: 0
+
+# Extra volume mounts for nginx cache dirs (used when readOnlyRootFilesystem is true)
+extraVolumeMounts: []
+extraVolumes: []
+
 # Override probes to work with nginx:alpine (responds on port 80 at /)
 # The real PayFlow Pro app serves on 8080; for the demo POC we use nginx as a stand-in
 livenessProbe:
